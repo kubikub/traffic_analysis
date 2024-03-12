@@ -6,56 +6,44 @@ import supervision as sv
 from collections import defaultdict, deque
 from ultralytics import YOLO
 
+
 def main():
-
-
     source = "https://youtu.be/z545k7Tcb5o"
-    # Add YouTube Video URL as input source (for e.g https://youtu.be/bvetuLwJIkA)
-    # and enable Stream Mode (`stream_mode = True`)
-    stream = CamGear(
-        source=source, stream_mode=True, logging=True,  time_delay=0
-    ).start()
-    video_metadata=stream.ytv_metadata
-
+    # Ajouter l'URL de la vidéo YouTube comme source d'entrée (par exemple https://youtu.be/bvetuLwJIkA)
+    # et activer le mode de diffusion (`stream_mode = True`)
+    stream = CamGear(source=source, stream_mode=True, logging=True,
+                       time_delay = 0).start()
+    video_metadata = stream.ytv_metadata
     print(video_metadata.keys())
-
     print(video_metadata['fps'])
     print(video_metadata['format'])
     print(video_metadata['format_index'])
-
     # search available resolution
-    resolutions=[format['resolution'] for format in video_metadata['formats']]
+    resolutions = [format['resolution'] for format in video_metadata['formats']]
     for res in resolutions:
         print(res)
 
-    # select the desired resolution to get right url 
-    desired_resolution = '1280x720'
+    # sélectionner la résolution désirée pour obtenir la bonne URL 
+    resolution_desiree = '1280x720'
     for format in video_metadata['formats']:
         
-        if format['resolution'] == desired_resolution:
+        if format['resolution'] == resolution_desiree:
             VIDEO = format['url']
             break
-    
-    
-    
-    
     print(VIDEO)
-
     MODEL = "models/yolov8s.pt"
     model = YOLO(MODEL)
     CLASS_NAMES_DICT = model.model.names
-    # print(CLASS_NAMES_DICT)
+    print(CLASS_NAMES_DICT)
     # load openvino model to get faster FPS 
-    model = YOLO("models/yolov8s_openvino_model/", task='detect')
-    # model=YOLO(MODEL)
-    # model.fuse()
-
+    model_openvino = YOLO("models/yolov8s_openvino_model/", task='detect')
+    # model_openvino=YOLO(MODEL)
+    # model_openvino.fuse()
     colors = sv.ColorPalette.LEGACY
 
     video_info = sv.VideoInfo.from_video_path(VIDEO)
     print(video_info)
     # calculate ratio between video stream and displayed size (here's 1280)
-
     coef=video_info.width/1280
     # print(coef)
 
@@ -69,7 +57,7 @@ def main():
 
     # 3 polygons so 3 values in each coordinate from left to right 
     #    [zone1,zone2, zone3]
-    x1 = [-160, -25, 971] 
+    x1 = [-160, -25, 971]
     y1 = [405, 710, 671]
     x2 = [112, 568, 1480]
     y2 = [503, 710, 671]
@@ -80,8 +68,6 @@ def main():
 
     # transform according video stream and displayed video ratio 
     x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x],[x1, y1, x2, y2, x3, y3, x4, y4])
-
-
     # search middle point of the polygon (x1+x4)/2) or tier point from top ( x1 + 2* x4) / 3) to draw line for counting 
     x14 = [(x1 + 2 * x4) / 3
         for x1,x4
