@@ -284,19 +284,30 @@ def main():
         # copy frame before annotate                      
         annotated_frame = frame.copy()
 
-        for i, (zone, zone_annotator, box_annotator, trace_annotator, line_zone, line_zone_annotator, label_annotator,line_start, line_end,view_transformer,speed_label,coordinate) in  enumerate(zip(zones, 
-                                                                                                                                                        zone_annotators,
-                                                                                                                                                        box_annotators,
-                                                                                                                                                        trace_annotators,
-                                                                                                                                                        line_zones,
-                                                                                                                                                        line_zone_annotators,
-                                                                                                                                                        label_annotators,
-                                                                                                                                                        lines_start,
-                                                                                                                                                        lines_end,
-                                                                                                                                                            view_transformers,
-                                                                                                                                                            speed_labels,
-                                                                                                                                                            coordinates)):
-
+        for i, (zone,
+                zone_annotator,
+                box_annotator,
+                trace_annotator,
+                line_zone,
+                line_zone_annotator,
+                label_annotator,
+                line_start,
+                line_end,
+                view_transformer,
+                speed_label,
+                coordinate) in enumerate(zip(
+                    zones,
+                    zone_annotators,
+                    box_annotators,
+                    trace_annotators,
+                    line_zones,
+                    line_zone_annotators,
+                    label_annotators,
+                    lines_start,
+                    lines_end,
+                    view_transformers,
+                    speed_labels,
+                    coordinates)):
             mask = zone.trigger(detections=detections)
             detections_filtered = detections[mask]
         
