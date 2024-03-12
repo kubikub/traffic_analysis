@@ -42,7 +42,7 @@ def main():
     MODEL = "models/yolov8s.pt"
     model=YOLO(MODEL)
     CLASS_NAMES_DICT = model.model.names
-    print(CLASS_NAMES_DICT)
+    # print(CLASS_NAMES_DICT)
     # load openvino model to get faster FPS 
     model = YOLO("models/yolov8s_openvino_model/", task='detect')
     # model=YOLO(MODEL)
@@ -75,6 +75,7 @@ def main():
     y3 = [ 195 , 212 , 212  ]
     x4 = [ 411 , 569 , 749  ]
     y4 = [ 195 , 212 , 212  ]
+
     # transform according video stream and displayed video ratio 
     x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x], [x1, y1, x2, y2, x3, y3, x4, y4])
 
@@ -208,6 +209,7 @@ def main():
                 sv.Point (x = 1077,y = 320)
 
     ]
+    #initialyze ByteTracker
     byte_tracker = sv.ByteTrack(track_thresh=0.25, track_buffer=100, match_thresh=0.8, frame_rate=video_info.fps)
 
     # byte_tracker = sv.ByteTrack()
@@ -215,6 +217,7 @@ def main():
     heat_map = sv.HeatMapAnnotator ()
     smoother = sv.DetectionsSmoother()
 
+    # intialize the source coordinate for speed estimation
     SOURCES = np.array([[
         [x4[0], y4[0]], 
         [x3[0], y3[0]], 
@@ -234,6 +237,7 @@ def main():
         [x1[2], y1[2]]
     ]])
 
+    # initialize Target real(in meters) coordinate 
     #zone1 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 75
@@ -271,7 +275,7 @@ def main():
     TARGETS = TARGETS.reshape(3, 4, 2)
 
 
-
+    # class searching transformation matrix between SOURCE and TARGET to get speed estimation  
     class ViewTransformer:
         def __init__(self, source: np.ndarray, target: np.ndarray) -> None:
             source = source.astype(np.float32)
@@ -291,6 +295,8 @@ def main():
     view_transformers=[ViewTransformer(source=s, target=t)
                     for s,t
                     in zip(SOURCES, TARGETS)]
+    
+
     labels = []
 
     selected_classes = [2, 3, 5, 7] # car, motorcycle, bus, truck from coco classes
@@ -299,6 +305,7 @@ def main():
     coordinates = np.append(coordinates,defaultdict(lambda: deque(maxlen=30)))
     coordinates = np.append(coordinates,defaultdict(lambda: deque(maxlen=30)))                     
 
+    # frame processing 
     def process_frame(frame: np.ndarray, fps) -> np.ndarray:
         speed_labels = [],[],[] 
         
