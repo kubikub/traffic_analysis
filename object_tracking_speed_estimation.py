@@ -11,41 +11,52 @@ import time
 def main():
 
     def video_manifest_extractor(source):
-        # Ajouter l'URL de la vidéo YouTube comme source d'entrée (par exemple https://youtu.be/bvetuLwJIkA)
-        # et activer le mode de diffusion (`stream_mode = True`)
-        stream = CamGear(source=source, stream_mode=True, logging=True,
-                         time_delay=0).start()
+        """
+        Function to extract metadata from a YouTube video source and find the desired resolution URL.
+
+        Parameters:
+        source (str): Video source URL (ex. "<https://youtu.be/bvetuLwJIkA>")
+
+        Returns:
+        str: Desired resolution video URL
+        """
+        stream = CamGear(source=source, stream_mode=True, logging=True, time_delay=0).start()
         video_metadata = stream.ytv_metadata
+
         print(video_metadata.keys())
-        print(video_metadata['fps'])
-        print(video_metadata['format'])
-        print(video_metadata['format_index'])
-        # Recherche de la résolution disponible
-        resolutions = [format['resolution'] for format in video_metadata['formats']]
+        print(video_metadata["fps"])
+        print(video_metadata["format"])
+        print(video_metadata["format_index"])
+
+        resolutions = [format["resolution"] for format in video_metadata["formats"]]
         for res in resolutions:
             print(res)
-        # Sélection de la résolution désirée pour obtenir la bonne URL 
+
         resolution_desiree = '1280x720'
-        for format in video_metadata['formats']: 
-            if format['resolution'] == resolution_desiree:
-                VIDEO = format['url']
+        for format in video_metadata["formats"]:
+            if format["resolution"] == resolution_desiree:
+                VIDEO = format["url"]
                 return VIDEO
+
     source = "https://youtu.be/z545k7Tcb5o"
     VIDEO = video_manifest_extractor(source)
     print(VIDEO)
+
+    # Load OpenVINO model for better performance
     MODEL = "models/yolov8s.pt"
     model = YOLO(MODEL)
+
+    # Get class names dictionary
     CLASS_NAMES_DICT = model.model.names
     print(CLASS_NAMES_DICT)
-    # load openvino model to get faster FPS 
-    model_openvino = YOLO("models/yolov8s_openvino_model/", task='detect')
-    # model_openvino=YOLO(MODEL)
-    # model_openvino.fuse()
+
+    model_openvino = YOLO("models/yolov8s_openvino_model/", task="detect")
     colors = sv.ColorPalette.LEGACY
+
     video_info = sv.VideoInfo.from_video_path(VIDEO)
-    print(video_info)
-    # calculate ratio between video stream and displayed size (here's 1280)
-    coef = video_info.width/1280
+
+    # Calculate the scaling coefficient based on the video width and the desired output width (1280)
+    coef = video_info.width / 1280
     # print(coef)
 
     # polygon design 
@@ -66,21 +77,24 @@ def main():
     y3 = [195, 212, 212]
     x4 = [411, 569, 749]
     y4 = [195, 212, 212]
-    # Transformer selon le flux vidéo et le ratio de la vidéo affichée
-    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [valeur * coef for valeur in x], [x1, y1, x2, y2, x3, y3, x4, y4])
-    # Trouver le point médian du polygone ((x1+x4)/2) ou 
-    # le point de tierce partie depuis le haut ((x1 + 2* x4) / 3) pour 
-    # dessiner une ligne de comptage
-    x14 = [(x1 + 2 * x4) / 3 for x1, x4 in zip(x1, x4)]
-    y14 = [(y1 + 2 * y4) / 3 for y1, y4 in zip(y1, y4)]
-    x23 = [(x2 + 2 * x3) / 3 for x2, x3 in zip(x2, x3)]
-    y23 = [(y2 + 2 * y3) / 3 for y2, y3 in zip(y2, y3)]
 
-    # polygon zone from left to right (becarefull must be in the same order
-    #  than le linezone)
+    # Scale coordinates according to the video flow and the aspect ratio of the displayed video
+    x1, y1, x2, y2, x3, y3, x4, y4 = map(
+        lambda vals: list(map(lambda val: val * coef, vals)),
+        [x1, y1, x2, y2, x3, y3, x4, y4]
+    )
+
+    # Find the centroid or third point from top of the polygon
+    # e.g.: ((x1 + 2* x4) / 3) for drawing counting lines
+    x14 = list(map(lambda x1, x4: (x1 + 2 * x4) / 3, x1, x4))
+    y14 = list(map(lambda y1, y4: (y1 + 2 * y4) / 3, y1, y4))
+    x23 = list(map(lambda x2, x3: (x2 + 2 * x3) / 3, x2, x3))
+    y23 = list(map(lambda y2, y3: (y2 + 2 * y3) / 3, y2, y3))
+
+    # Polygon zones defined from left to right (make sure in the same order
+    #  as the linezone)
     polygons = [
-        np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]
-        ], np.int32)
+        np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int32)
         for x1, y1, x2, y2, x3, y3, x4, y4
         in zip(x1, y1, x2, y2, x3, y3, x4, y4)
     ]
@@ -308,10 +322,8 @@ def main():
             points = detections_filtered.get_anchors_coordinates(
                     anchor=sv.Position.BOTTOM_CENTER)
 
-            # plug the view transformer into an existing detection pipeline
-            
+            # plug the view transformer into an existing detection pipeline            
             points = view_transformer.transform_points(points=points).astype(int)
-            
             for tracker_id, [_, y] in zip(detections_filtered.tracker_id, points):
                 coordinate[tracker_id].append(y)
 
@@ -321,7 +333,6 @@ def main():
                     # print(coordinates[tracker_id], " - id :",
                     #  tracker_id, 'len : ', len(coordinates[tracker_id]))
                     speed_label.append(f"#{tracker_id}")
-                    
                 else:
                     try:
                         coordinate_start = coordinate[tracker_id][-1]
@@ -340,7 +351,6 @@ def main():
             # line_zone.trigger(detections=detections_filtered)
             annotated_frame = sv.draw_line(scene=annotated_frame, start=line_start, end=line_end, color=colors.by_idx(i) )
             # annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {i+random.randint(0,100)}")
-            
             annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {line_zone.in_count}") if i == 0 else zone_annotator.annotate(scene=annotated_frame, 
                                                                                                                                                             label=f"Dir. Est : {line_zone.out_count}") 
             annotated_frame = label_annotator.annotate(scene=annotated_frame,
@@ -385,5 +395,7 @@ def main():
         time.sleep(max(1/25 - (time.time() - start_time), 0))
     cap.release()
     cv2.destroyAllWindows()
+
+
 if __name__ == '__main__':
     main()
