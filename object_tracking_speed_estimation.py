@@ -69,14 +69,14 @@ def main():
 
     # 3 polygons so 3 values in each coordinate from left to right 
     #    [zone1,zone2, zone3]
-    x1 = [-160 , -25 , 971  ] 
-    y1 = [ 405 , 710 , 671  ]
-    x2 = [ 112 , 568 , 1480 ]
-    y2 = [ 503 , 710 , 671  ]
-    x3 = [ 557 , 706 , 874  ]
-    y3 = [ 195 , 212 , 212  ]
-    x4 = [ 411 , 569 , 749  ]
-    y4 = [ 195 , 212 , 212  ]
+    x1 = [-160, -25, 971] 
+    y1 = [405, 710, 671]
+    x2 = [112, 568, 1480]
+    y2 = [503, 710, 671]
+    x3 = [557, 706, 874]
+    y3 = [195, 212, 212]
+    x4 = [411, 569, 749]
+    y4 = [195, 212, 212]
 
     # transform according video stream and displayed video ratio 
     x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x],[x1, y1, x2, y2, x3, y3, x4, y4])
