@@ -5,6 +5,7 @@ import numpy as np
 import supervision as sv
 from collections import defaultdict, deque
 from ultralytics import YOLO
+import time
 
 
 def main():
@@ -41,7 +42,6 @@ def main():
     # model_openvino=YOLO(MODEL)
     # model_openvino.fuse()
     colors = sv.ColorPalette.LEGACY
-
     video_info = sv.VideoInfo.from_video_path(VIDEO)
     print(video_info)
     # calculate ratio between video stream and displayed size (here's 1280)
@@ -84,7 +84,6 @@ def main():
         for x1, y1, x2, y2, x3, y3, x4, y4
         in zip(x1, y1, x2, y2, x3, y3, x4, y4)
     ]
-
     # initialize our zones
     zones = [
         sv.PolygonZone(
@@ -105,7 +104,6 @@ def main():
         for index, zone
         in enumerate(zones)
     ]
-
     label_annotators = [
         sv.LabelAnnotator(
             text_position=sv.Position.TOP_CENTER,
@@ -116,8 +114,6 @@ def main():
             for index
             in range(len(zones))
         ]
-    
-
     # box_annotators = [
     #     sv.BoxAnnotator(
     #         color=colors.by_idx(index),
@@ -192,7 +188,6 @@ def main():
     fps_monitor = sv.FPSMonitor()
     heat_map = sv.HeatMapAnnotator()
     smoother = sv.DetectionsSmoother()
-
     # intialize the source coordinate for speed estimation
     SOURCES = np.array([[
         [x4[0], y4[0]],
@@ -210,7 +205,6 @@ def main():
            [x1[2], y1[2]]
            ]
            ])
-
     # initialize Target real(in meters) coordinate 
     #zone1 in meters
     TARGET_WIDTH = 6
@@ -221,23 +215,18 @@ def main():
         [TARGET_WIDTH - 1, TARGET_HEIGHT - 1],
         [0, TARGET_HEIGHT - 1],
     ])
-
     #zone 2 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 85
-
     TARGETS = np.append(TARGETS, np.array([
         [0, 0],
         [TARGET_WIDTH - 1, 0],
         [TARGET_WIDTH - 1, TARGET_HEIGHT - 1],
         [0, TARGET_HEIGHT - 1],
     ]), axis=0)
-
     #zone3 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 80
-
-
     TARGETS = np.append(TARGETS, np.array([
         [0, 0],
         [TARGET_WIDTH - 1, 0],
@@ -246,10 +235,10 @@ def main():
     ]), axis=0)
 
     TARGETS = TARGETS.reshape(3, 4, 2)
-
-
-    # class searching transformation matrix between SOURCE and TARGET to get speed estimation  
+    # class searching transformation matrix between
+    #  SOURCE and TARGET to get speed estimation  
     class ViewTransformer:
+
         def __init__(self, source: np.ndarray, target: np.ndarray) -> None:
             source = source.astype(np.float32)
             target = target.astype(np.float32)
@@ -268,19 +257,17 @@ def main():
     view_transformers = [ViewTransformer(source=s, target=t)
                     for s, t
                     in zip(SOURCES, TARGETS)]
-    
-
     labels = []
-
-    selected_classes = [2, 3, 5, 7] # car, motorcycle, bus, truck from coco classes
-    # initialize the dictionary that we will use to store the coordinates for each zone
+    # car, motorcycle, bus, truck from coco classes
+    selected_classes = [2, 3, 5, 7] 
+    # initialize the dictionary that we 
+    # will use to store the coordinates for each zone
     coordinates = defaultdict(lambda: deque(maxlen=30))
     coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
     coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
     # frame processing
     def process_frame(frame: np.ndarray, fps) -> np.ndarray:
-        speed_labels = [], [], [] 
-        
+        speed_labels = [], [], []
         results = model_openvino(frame, imgsz=640, verbose=False)[0]
         # results = model(frame)[0]
         detections = sv.Detections.from_ultralytics(results)
@@ -288,7 +275,7 @@ def main():
         detections = byte_tracker.update_with_detections(detections)
         # detections = smoother.update_with_detections(detections)
 
-        # copy frame before annotate                      
+        # copy frame before annotate                     
         annotated_frame = frame.copy()
 
         for i, (zone,
@@ -330,24 +317,23 @@ def main():
 
             # wait to have enough data
             for tracker_id in detections_filtered.tracker_id:
-                            if len(coordinate[tracker_id]) < fps/2:
-                                # print(coordinates[tracker_id], " - id :", tracker_id, 'len : ', len(coordinates[tracker_id]))
-                                speed_label.append(f"#{tracker_id}")
-                                
-                            else:
-                                try:
-                                    coordinate_start = coordinate[tracker_id][-1]
-                                    coordinate_end = coordinate[tracker_id][0]
-                                    distance = abs(coordinate_start - coordinate_end)
-                                    time = len(coordinate[tracker_id]) / fps
-                                    speed = distance / time * 3.6
-                                    speed_label.append(f"{int(speed)} km/h")
+                if len(coordinate[tracker_id]) < fps/2:
+                    # print(coordinates[tracker_id], " - id :",
+                    #  tracker_id, 'len : ', len(coordinates[tracker_id]))
+                    speed_label.append(f"#{tracker_id}")
+                    
+                else:
+                    try:
+                        coordinate_start = coordinate[tracker_id][-1]
+                        coordinate_end = coordinate[tracker_id][0]
+                        distance = abs(coordinate_start - coordinate_end)
+                        time = len(coordinate[tracker_id]) / fps
+                        speed = distance / time * 3.6
+                        speed_label.append(f"{int(speed)} km/h")
 
-                                except: 
-
-                                    speed_label.append(f"#{tracker_id}")
-
-                                    pass
+                    except Exception as e:
+                        speed_label.append(f"#{tracker_id}")
+                        print(f"An error occurred: {e}")
             # labels = [
             # f"#{tracker_id} "
             # for _,_,_,_,tracker_id in detections_filtered]
@@ -366,7 +352,8 @@ def main():
                                                     detections=detections_filtered,
                                                     )
             
-            annotated_frame = trace_annotator.annotate(scene=annotated_frame, detections=detections_filtered )
+            annotated_frame = trace_annotator.annotate(scene=annotated_frame,
+                                                       detections=detections_filtered)
             line_zone.trigger(detections=detections_filtered)
             # print(line_zone.in_count)
             # print(line_zone.out_count)
@@ -381,11 +368,12 @@ def main():
     print(f"image : {width}x{height}")
 
     while True:
+        start_time = time.time()
         ret, frame = cap.read()
         if not ret:
             break
         # frame=cv2.resize(frame,(1280,720))
-        show = process_frame(frame,int(fps))
+        show = process_frame(frame, int(fps))
         fps_monitor.tick()
         fps = fps_monitor()
         fps_text = f"FPS: {fps:.0f}"
@@ -393,6 +381,8 @@ def main():
         cv2.imshow("Counting - Speed Estimation", show)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        # Limiter les FPS à 25
+        time.sleep(max(1/25 - (time.time() - start_time), 0))
     cap.release()
     cv2.destroyAllWindows()
 if __name__ == '__main__':
