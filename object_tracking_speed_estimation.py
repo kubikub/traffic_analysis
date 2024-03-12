@@ -411,7 +411,7 @@ def main():
         fps_text = f"FPS: {fps:.0f}"
         cv2.putText(show, fps_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         
-        cv2.imshow("Counting", show)
+        cv2.imshow("Counting - Speed Estimation", show)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
