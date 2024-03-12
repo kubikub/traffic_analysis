@@ -81,7 +81,8 @@ def main():
     x4 = [411, 569, 749]
     y4 = [195, 212, 212]
 
-    # Scale coordinates according to the video flow and the aspect ratio of the displayed video
+    # Scale coordinates according to the video flow and the 
+    # aspect ratio of the displayed video
     x1, y1, x2, y2, x3, y3, x4, y4 = map(
         lambda vals: list(map(lambda val: val * coef, vals)),
         [x1, y1, x2, y2, x3, y3, x4, y4]
@@ -170,10 +171,11 @@ def main():
         for x23, y23
         in zip(x23, y23)
     ]
-    positions = [(sv.Position.CENTER, sv.Position.CENTER),
-                 (sv.Position.CENTER, sv.Position.CENTER),
-                 (sv.Position.CENTER, sv.Position.CENTER),
-                ]
+    positions = [
+        (sv.Position.CENTER, sv.Position.CENTER),
+        (sv.Position.CENTER, sv.Position.CENTER),
+        (sv.Position.CENTER, sv.Position.CENTER),
+    ]
     line_zones = [
         sv.LineZone(start=line_start, end=line_end,
                     triggering_anchors=position)
@@ -181,15 +183,16 @@ def main():
         in zip(lines_start, lines_end, positions)
     ]
     # for automatic line zone annotator not use here want to use a custom one
-    line_zone_annotators = [sv.LineZoneAnnotator(thickness=1,
-                                                 color=colors.by_idx(index),
-                                                 text_thickness=1,
-                                                 text_scale=0.5,
-                                                 text_offset=4)
-                            for index
-                            in range(len(line_zones))
+    line_zone_annotators = [
+        sv.LineZoneAnnotator(thickness=1,
+                             color=colors.by_idx(index),
+                             text_thickness=1,
+                             text_scale=0.5,
+                             text_offset=4)
+        for index
+        in range(len(line_zones))
     ]
-    # couting line zone text position 
+    # couting line zone text position
     text_pos = [
         sv.Point(x=100, y=320),
         sv.Point(x=700, y=320),
@@ -385,7 +388,7 @@ def main():
             # print(line_zone.out_count)
         return annotated_frame
     # for direct show
-    cap = cv2.VideoCapture(VIDEO)  
+    cap = cv2.VideoCapture(VIDEO)
     # fps = int(cap.get(cv2.CAP_PROP_FPS))
     fps = video_info.fps
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
