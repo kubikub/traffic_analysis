@@ -12,7 +12,7 @@ def main():
     # Ajouter l'URL de la vidéo YouTube comme source d'entrée (par exemple https://youtu.be/bvetuLwJIkA)
     # et activer le mode de diffusion (`stream_mode = True`)
     stream = CamGear(source=source, stream_mode=True, logging=True,
-                       time_delay = 0).start()
+                    time_delay = 0).start()
     video_metadata = stream.ytv_metadata
     print(video_metadata.keys())
     print(video_metadata['fps'])
@@ -44,7 +44,7 @@ def main():
     video_info = sv.VideoInfo.from_video_path(VIDEO)
     print(video_info)
     # calculate ratio between video stream and displayed size (here's 1280)
-    coef=video_info.width/1280
+    coef = video_info.width/1280
     # print(coef)
 
     # polygon design 
@@ -68,27 +68,19 @@ def main():
 
     # transform according video stream and displayed video ratio 
     x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x],[x1, y1, x2, y2, x3, y3, x4, y4])
-    # search middle point of the polygon (x1+x4)/2) or tier point from top ( x1 + 2* x4) / 3) to draw line for counting 
-    x14 = [(x1 + 2 * x4) / 3
-        for x1,x4
-        in zip(x1,x4)]
-    y14 = [(y1 + 2 * y4) / 3
-        for y1,y4
-        in zip(y1,y4)]
-    x23 = [ (x2 + 2 * x3) / 3
-        for x2,x3
-        in zip(x2,x3)]
-    y23 = [(y2 + 2 * y3) / 3
-        for y2,y3
-        in zip(y2,y3)]
+    # Chercher le point médian du polygone ((x1+x4)/2) ou le point de tierce partie depuis le haut ((x1 + 2* x4) / 3) pour dessiner une ligne de comptage 
+    x14 = [(x1 + 2 * x4) / 3 for x1,x4 in zip(x1,x4)]
+    y14 = [(y1 + 2 * y4) / 3 for y1,y4 in zip(y1,y4)]
+    x23 = [ (x2 + 2 * x3) / 3 for x2,x3 in zip(x2,x3)]
+    y23 = [(y2 + 2 * y3) / 3 for y2,y3 in zip(y2,y3)]
 
     # polygon zone from left to right (becarefull must be in the same order than le linezone)
     polygons = [
-    np.array([
-    [x1, y1],[x2 , y2],[x3 , y3],[x4 , y4]
-    ],np.int32)
-    for x1, y1, x2, y2, x3, y3, x4, y4
-    in zip(x1, y1, x2, y2, x3, y3, x4, y4)
+        np.array([
+        [x1, y1],[x2 , y2],[x3 , y3],[x4 , y4]
+        ],np.int32)
+        for x1, y1, x2, y2, x3, y3, x4, y4
+        in zip(x1, y1, x2, y2, x3, y3, x4, y4)
     ]
 
     # initialize our zones
@@ -102,11 +94,11 @@ def main():
     ]
     zone_annotators = [
         sv.PolygonZoneAnnotator(
-            zone = zone,
-            color = colors.by_idx(index),
-            thickness = 2,
-            text_thickness = 1,
-            text_scale = 0.5,
+            zone=zone,
+            color=colors.by_idx(index),
+            thickness=2,
+            text_thickness=1,
+            text_scale=0.5,
         )
         for index, zone
         in enumerate(zones)
@@ -205,15 +197,15 @@ def main():
 
     # intialize the source coordinate for speed estimation
     SOURCES = np.array([[
-        [x4[0], y4[0]], 
-        [x3[0], y3[0]], 
-        [x2[0], y2[0]], 
+        [x4[0], y4[0]],
+        [x3[0], y3[0]],
+        [x2[0], y2[0]],
         [x1[0], y1[0]]
 
-    ],[ [x4[1], y4[1]], 
-        [x3[1], y3[1]], 
-        [x2[1], y2[1]], 
-        [x1[1], y1[1]]
+    ],[[x4[1], y4[1]],
+       [x3[1], y3[1]],
+       [x2[1], y2[1]],
+       [x1[1], y1[1]]
     ],
 
     [
@@ -295,7 +287,7 @@ def main():
     def process_frame(frame: np.ndarray, fps) -> np.ndarray:
         speed_labels = [],[],[] 
         
-        results = model(frame, imgsz=640, verbose=False)[0]
+        results = model_openvino(frame, imgsz=640, verbose=False)[0]
         # results = model(frame)[0]
         detections = sv.Detections.from_ultralytics(results)
         detections = detections[np.isin(detections.class_id, selected_classes)] # filer on selected classes
