@@ -8,28 +8,29 @@ from ultralytics import YOLO
 
 
 def main():
-    source = "https://youtu.be/z545k7Tcb5o"
-    # Ajouter l'URL de la vidéo YouTube comme source d'entrée (par exemple https://youtu.be/bvetuLwJIkA)
-    # et activer le mode de diffusion (`stream_mode = True`)
-    stream = CamGear(source=source, stream_mode=True, logging=True,
-                    time_delay = 0).start()
-    video_metadata = stream.ytv_metadata
-    print(video_metadata.keys())
-    print(video_metadata['fps'])
-    print(video_metadata['format'])
-    print(video_metadata['format_index'])
-    # search available resolution
-    resolutions = [format['resolution'] for format in video_metadata['formats']]
-    for res in resolutions:
-        print(res)
 
-    # sélectionner la résolution désirée pour obtenir la bonne URL 
-    resolution_desiree = '1280x720'
-    for format in video_metadata['formats']:
-        
-        if format['resolution'] == resolution_desiree:
-            VIDEO = format['url']
-            break
+    def video_manifest_extractor(source):
+        # Ajouter l'URL de la vidéo YouTube comme source d'entrée (par exemple https://youtu.be/bvetuLwJIkA)
+        # et activer le mode de diffusion (`stream_mode = True`)
+        stream = CamGear(source=source, stream_mode=True, logging=True,
+                         time_delay=0).start()
+        video_metadata = stream.ytv_metadata
+        print(video_metadata.keys())
+        print(video_metadata['fps'])
+        print(video_metadata['format'])
+        print(video_metadata['format_index'])
+        # Recherche de la résolution disponible
+        resolutions = [format['resolution'] for format in video_metadata['formats']]
+        for res in resolutions:
+            print(res)
+        # Sélection de la résolution désirée pour obtenir la bonne URL 
+        resolution_desiree = '1280x720'
+        for format in video_metadata['formats']: 
+            if format['resolution'] == resolution_desiree:
+                VIDEO = format['url']
+                return VIDEO
+    source = "https://youtu.be/z545k7Tcb5o"
+    VIDEO = video_manifest_extractor(source)
     print(VIDEO)
     MODEL = "models/yolov8s.pt"
     model = YOLO(MODEL)
@@ -66,17 +67,19 @@ def main():
     x4 = [411, 569, 749]
     y4 = [195, 212, 212]
     # Transformer selon le flux vidéo et le ratio de la vidéo affichée
-    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [valeur * coef for valeur in x],[x1, y1, x2, y2, x3, y3, x4, y4])
-    # Trouver le point médian du polygone ((x1+x4)/2) ou le point de tierce partie depuis le haut ((x1 + 2* x4) / 3) pour dessiner une ligne de comptage
+    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [valeur * coef for valeur in x], [x1, y1, x2, y2, x3, y3, x4, y4])
+    # Trouver le point médian du polygone ((x1+x4)/2) ou 
+    # le point de tierce partie depuis le haut ((x1 + 2* x4) / 3) pour 
+    # dessiner une ligne de comptage
     x14 = [(x1 + 2 * x4) / 3 for x1, x4 in zip(x1, x4)]
     y14 = [(y1 + 2 * y4) / 3 for y1, y4 in zip(y1, y4)]
     x23 = [(x2 + 2 * x3) / 3 for x2, x3 in zip(x2, x3)]
     y23 = [(y2 + 2 * y3) / 3 for y2, y3 in zip(y2, y3)]
 
-    # polygon zone from left to right (becarefull must be in the same order than le linezone)
+    # polygon zone from left to right (becarefull must be in the same order
+    #  than le linezone)
     polygons = [
-        np.array([
-        [x1, y1], [x2, y2], [x3, y3], [x4, y4]
+        np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]
         ], np.int32)
         for x1, y1, x2, y2, x3, y3, x4, y4
         in zip(x1, y1, x2, y2, x3, y3, x4, y4)
@@ -154,36 +157,40 @@ def main():
         for x23, y23
         in zip(x23, y23)
     ]
-    positions = [(sv.Position.CENTER,sv.Position.CENTER),
-            (sv.Position.CENTER,sv.Position.CENTER),
-            (sv.Position.CENTER,sv.Position.CENTER),
+    positions = [(sv.Position.CENTER, sv.Position.CENTER),
+                 (sv.Position.CENTER, sv.Position.CENTER),
+                 (sv.Position.CENTER, sv.Position.CENTER),
     ]
-    line_zones = [sv.LineZone(start=line_start, end=line_end, 
+    line_zones = [sv.LineZone(start=line_start, end=line_end,
                               triggering_anchors=position)
-                for line_start, line_end, position
-                in zip(lines_start,lines_end,positions)
+                                for line_start, line_end, position
+                                in zip(lines_start, lines_end, positions)
     ]
     # for automatic line zone annotator not use here want to use a custom one
     line_zone_annotators = [sv.LineZoneAnnotator(thickness=1,
-                                            color = colors.by_idx(index),
-                                                text_thickness=1,
-                                                text_scale=0.5,
-                                                    text_offset=4)
-        for index
-        in range(len(line_zones))
+                                            color=colors.by_idx(index),
+                                            text_thickness=1,
+                                            text_scale=0.5,
+                                            text_offset=4)
+                                            for index
+                                            in range(len(line_zones))
     ]
     # couting line zone text position 
-    text_pos = [sv.Point (x=100, y=320),
-                sv.Point (x=700, y=320),
-                sv.Point (x=1077, y=320)
+    text_pos = [
+        sv.Point(x=100, y=320),
+        sv.Point(x=700, y=320),
+        sv.Point(x=1077, y=320)
     ]
     #initialyze ByteTracker
-    byte_tracker = sv.ByteTrack(track_thresh=0.25, track_buffer=100, 
-                                match_thresh=0.8, frame_rate=video_info.fps)
-
+    byte_tracker = sv.ByteTrack(
+        track_thresh=0.25,
+        track_buffer=100, 
+        match_thresh=0.8,
+        frame_rate=video_info.fps
+    )
     # byte_tracker = sv.ByteTrack()
     fps_monitor = sv.FPSMonitor()
-    heat_map = sv.HeatMapAnnotator ()
+    heat_map = sv.HeatMapAnnotator()
     smoother = sv.DetectionsSmoother()
 
     # intialize the source coordinate for speed estimation
