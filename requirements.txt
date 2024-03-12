@@ -7,4 +7,4 @@ supervision==0.18.0
 ultralytics==8.1.5
 vidgear==0.3.2
 yt-dlp==2023.10.13
-python==3.11.6
+#python==3.11.6
