@@ -10,37 +10,36 @@ from ultralytics import YOLO
 
 def main():
 
-    def video_link_resolution(source, desired_resolution = '1280x720' ):
-        
-        # Add YouTube Video URL as input source (for e.g https://youtu.be/bvetuLwJIkA)
-        # and enable Stream Mode (`stream_mode = True`)
-        stream = CamGear(
-            source=source, stream_mode=True, logging=True,  time_delay=0
-        ).start()
-        video_metadata=stream.ytv_metadata
-
-        print(video_metadata.keys())
-
-        print(video_metadata['fps'])
-        print(video_metadata['format'])
-        print(video_metadata['format_index'])
-
-        # search available resolution
-        resolutions=[format['resolution'] for format in video_metadata['formats']]
-        for res in resolutions:
-            print(res)
-
-        # select the desired resolution to get right url 
-        # desired_resolution = '1280x720'
-        for format in video_metadata['formats']:
-            
-            if format['resolution'] == desired_resolution:
-                VIDEO = format['url']
-                break
-        return VIDEO
-    
     source="https://youtu.be/z545k7Tcb5o"
-    VIDEO = video_link_resolution(source)
+    # Add YouTube Video URL as input source (for e.g https://youtu.be/bvetuLwJIkA)
+    # and enable Stream Mode (`stream_mode = True`)
+    stream = CamGear(
+        source=source, stream_mode=True, logging=True,  time_delay=0
+    ).start()
+    video_metadata=stream.ytv_metadata
+
+    print(video_metadata.keys())
+
+    print(video_metadata['fps'])
+    print(video_metadata['format'])
+    print(video_metadata['format_index'])
+
+    # search available resolution
+    resolutions=[format['resolution'] for format in video_metadata['formats']]
+    for res in resolutions:
+        print(res)
+
+    # select the desired resolution to get right url 
+    # desired_resolution = '1280x720'
+    for format in video_metadata['formats']:
+        
+        if format['resolution'] == desired_resolution:
+            VIDEO = format['url']
+            break
+    
+    
+    
+    
     print(VIDEO)
 
     MODEL = "models/yolov8s.pt"
