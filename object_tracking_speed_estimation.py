@@ -373,16 +373,20 @@ def main():
                     scene=annotated_frame,
                     label=f"{direction_label} : {line_zone.out_count}")
 
-            annotated_frame = label_annotator.annotate(scene=annotated_frame,
-                                                       detections=detections_filtered,
-                                                       labels=speed_label)
+            annotated_frame = label_annotator.annotate(
+                scene=annotated_frame,
+                detections=detections_filtered,
+                labels=speed_label)
 
-            # annotated_frame=line_zone_annotator.annotate(annotated_frame,line_counter=line_zone )
-            annotated_frame = box_annotator.annotate(scene=annotated_frame,
-                                                     detections=detections_filtered)
+            # annotated_frame=line_zone_annotator.annotate(
+            # annotated_frame,line_counter=line_zone )
+            annotated_frame = box_annotator.annotate(
+                scene=annotated_frame,
+                detections=detections_filtered)
 
-            annotated_frame = trace_annotator.annotate(scene=annotated_frame,
-                                                       detections=detections_filtered)
+            annotated_frame = trace_annotator.annotate(
+                scene=annotated_frame,
+                detections=detections_filtered)
             line_zone.trigger(detections=detections_filtered)
             # print(line_zone.in_count)
             # print(line_zone.out_count)
