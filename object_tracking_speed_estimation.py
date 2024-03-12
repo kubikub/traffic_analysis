@@ -348,7 +348,7 @@ def main():
             annotated_frame = sv.draw_line(scene=annotated_frame, start=line_start, end=line_end, color=colors.by_idx(i) )
             # annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {i+random.randint(0,100)}")
             
-            annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {line_zone.in_count}") if i==0 else zone_annotator.annotate(scene=annotated_frame, 
+            annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {line_zone.in_count}") if i == 0 else zone_annotator.annotate(scene=annotated_frame, 
                                                                                                                                                             label=f"Dir. Est : {line_zone.out_count}") 
             annotated_frame = label_annotator.annotate(scene=annotated_frame,
                                                     detections=detections_filtered,
@@ -359,17 +359,15 @@ def main():
                                                     detections=detections_filtered,
                                                     )
             
-            annotated_frame = trace_annotator.annotate(scene=annotated_frame,detections=detections_filtered )
+            annotated_frame = trace_annotator.annotate(scene=annotated_frame, detections=detections_filtered )
             line_zone.trigger(detections=detections_filtered)
             # print(line_zone.in_count)
             # print(line_zone.out_count)
-        
-
         return annotated_frame
     # for direct show
     cap = cv2.VideoCapture(VIDEO)  
     # fps = int(cap.get(cv2.CAP_PROP_FPS))
-    fps=video_info.fps
+    fps = video_info.fps
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     print(f"FPS: {fps}")
@@ -380,23 +378,15 @@ def main():
         if not ret:
             break
         # frame=cv2.resize(frame,(1280,720))
-        show=process_frame(frame,int(fps))
-    
+        show = process_frame(frame,int(fps))
         fps_monitor.tick()
         fps = fps_monitor()
         fps_text = f"FPS: {fps:.0f}"
         cv2.putText(show, fps_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        
         cv2.imshow("Counting - Speed Estimation", show)
-        
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()
-
-
 if __name__ == '__main__':
-
     main()
-
-
