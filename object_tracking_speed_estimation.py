@@ -65,20 +65,19 @@ def main():
     y3 = [195, 212, 212]
     x4 = [411, 569, 749]
     y4 = [195, 212, 212]
-
-    # transform according video stream and displayed video ratio 
-    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x],[x1, y1, x2, y2, x3, y3, x4, y4])
-    # Chercher le point médian du polygone ((x1+x4)/2) ou le point de tierce partie depuis le haut ((x1 + 2* x4) / 3) pour dessiner une ligne de comptage 
-    x14 = [(x1 + 2 * x4) / 3 for x1,x4 in zip(x1,x4)]
-    y14 = [(y1 + 2 * y4) / 3 for y1,y4 in zip(y1,y4)]
-    x23 = [ (x2 + 2 * x3) / 3 for x2,x3 in zip(x2,x3)]
-    y23 = [(y2 + 2 * y3) / 3 for y2,y3 in zip(y2,y3)]
+    # Transformer selon le flux vidéo et le ratio de la vidéo affichée
+    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [valeur * coef for valeur in x],[x1, y1, x2, y2, x3, y3, x4, y4])
+    # Trouver le point médian du polygone ((x1+x4)/2) ou le point de tierce partie depuis le haut ((x1 + 2* x4) / 3) pour dessiner une ligne de comptage
+    x14 = [(x1 + 2 * x4) / 3 for x1, x4 in zip(x1, x4)]
+    y14 = [(y1 + 2 * y4) / 3 for y1, y4 in zip(y1, y4)]
+    x23 = [(x2 + 2 * x3) / 3 for x2, x3 in zip(x2, x3)]
+    y23 = [(y2 + 2 * y3) / 3 for y2, y3 in zip(y2, y3)]
 
     # polygon zone from left to right (becarefull must be in the same order than le linezone)
     polygons = [
         np.array([
-        [x1, y1],[x2 , y2],[x3 , y3],[x4 , y4]
-        ],np.int32)
+        [x1, y1], [x2, y2], [x3, y3], [x4, y4]
+        ], np.int32)
         for x1, y1, x2, y2, x3, y3, x4, y4
         in zip(x1, y1, x2, y2, x3, y3, x4, y4)
     ]
@@ -86,8 +85,8 @@ def main():
     # initialize our zones
     zones = [
         sv.PolygonZone(
-            polygon = polygon,
-            frame_resolution_wh = video_info.resolution_wh
+            polygon=polygon,
+            frame_resolution_wh=video_info.resolution_wh
         )
         for polygon
         in polygons
@@ -106,14 +105,15 @@ def main():
 
     label_annotators = [
         sv.LabelAnnotator(
-            text_position = sv.Position.TOP_CENTER,
+            text_position=sv.Position.TOP_CENTER,
             color=colors.by_idx(index),
-            text_thickness = 1,
-            text_scale = 0.5,
+            text_thickness=1,
+            text_scale=0.5,
             )
-            for index 
+            for index
             in range(len(zones))
-    ]
+        ]
+    
 
     # box_annotators = [
     #     sv.BoxAnnotator(
@@ -127,68 +127,59 @@ def main():
     # ]
     box_annotators = [
         sv.BoundingBoxAnnotator(
-            color = colors.by_idx(index),
-            thickness = 1,
+            color=colors.by_idx(index),
+            thickness=1,
             )
         for index
         in range(len(polygons))
     ]
 
-    trace_annotators=[
+    trace_annotators = [
         sv.TraceAnnotator(
-            color = colors.by_idx(index),
-            thickness = 1,
-            trace_length = video_info.fps * 1.5,
-            position = sv.Position.BOTTOM_CENTER,
+            color=colors.by_idx(index),
+            thickness=1,
+            trace_length=video_info.fps * 1.5,
+            position=sv.Position.BOTTOM_CENTER,
             )
         for index
         in range(len(polygons))
     ]
-
-
-    lines_start=[
-    
+    lines_start = [
         sv.Point(x14, y14)
-        for x14,y14
-        in zip(x14,y14)
-    
+        for x14, y14
+        in zip(x14, y14)
     ]
-
-    lines_end =[
-        
+    lines_end = [
         sv.Point(x23, y23)
-        for x23,y23
-        in zip(x23,y23)
+        for x23, y23
+        in zip(x23, y23)
     ]
-
-    positions=[(sv.Position.CENTER,sv.Position.CENTER),
+    positions = [(sv.Position.CENTER,sv.Position.CENTER),
             (sv.Position.CENTER,sv.Position.CENTER),
             (sv.Position.CENTER,sv.Position.CENTER),
-            ]
-
-    line_zones = [ sv.LineZone(start=line_start, end=line_end, triggering_anchors=position)
+    ]
+    line_zones = [sv.LineZone(start=line_start, end=line_end, 
+                              triggering_anchors=position)
                 for line_start, line_end, position
                 in zip(lines_start,lines_end,positions)
     ]
-
     # for automatic line zone annotator not use here want to use a custom one
-    line_zone_annotators = [sv.LineZoneAnnotator(thickness = 1,
+    line_zone_annotators = [sv.LineZoneAnnotator(thickness=1,
                                             color = colors.by_idx(index),
-                                                text_thickness = 1,
-                                                text_scale = 0.5,
-                                                    text_offset = 4)
+                                                text_thickness=1,
+                                                text_scale=0.5,
+                                                    text_offset=4)
         for index
         in range(len(line_zones))
     ]
-
     # couting line zone text position 
-    text_pos=[ sv.Point (x = 100,y = 320),
-                sv.Point (x = 700,y = 320),
-                sv.Point (x = 1077,y = 320)
-
+    text_pos = [sv.Point (x=100, y=320),
+                sv.Point (x=700, y=320),
+                sv.Point (x=1077, y=320)
     ]
     #initialyze ByteTracker
-    byte_tracker = sv.ByteTrack(track_thresh=0.25, track_buffer=100, match_thresh=0.8, frame_rate=video_info.fps)
+    byte_tracker = sv.ByteTrack(track_thresh=0.25, track_buffer=100, 
+                                match_thresh=0.8, frame_rate=video_info.fps)
 
     # byte_tracker = sv.ByteTrack()
     fps_monitor = sv.FPSMonitor()
@@ -202,24 +193,21 @@ def main():
         [x2[0], y2[0]],
         [x1[0], y1[0]]
 
-    ],[[x4[1], y4[1]],
-       [x3[1], y3[1]],
-       [x2[1], y2[1]],
-       [x1[1], y1[1]]
-    ],
-
-    [
-        [x4[2], y4[2]], 
-        [x3[2], y3[2]], 
-        [x2[2], y2[2]], 
-        [x1[2], y1[2]]
-    ]])
+    ], [[x4[1], y4[1]],
+        [x3[1], y3[1]],
+        [x2[1], y2[1]],
+        [x1[1], y1[1]]],
+          [[x4[2], y4[2]],
+           [x3[2], y3[2]],
+           [x2[2], y2[2]],
+           [x1[2], y1[2]]
+           ]
+           ])
 
     # initialize Target real(in meters) coordinate 
     #zone1 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 75
-
     TARGETS = np.array([
         [0, 0],
         [TARGET_WIDTH - 1, 0],
@@ -231,7 +219,7 @@ def main():
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 85
 
-    TARGETS= np.append(TARGETS, np.array([
+    TARGETS = np.append(TARGETS, np.array([
         [0, 0],
         [TARGET_WIDTH - 1, 0],
         [TARGET_WIDTH - 1, TARGET_HEIGHT - 1],
@@ -248,7 +236,7 @@ def main():
         [TARGET_WIDTH - 1, 0],
         [TARGET_WIDTH - 1, TARGET_HEIGHT - 1],
         [0, TARGET_HEIGHT - 1],
-    ]),axis=0)
+    ]), axis=0)
 
     TARGETS = TARGETS.reshape(3, 4, 2)
 
@@ -270,8 +258,8 @@ def main():
             return transformed_points.reshape(-1, 2)
 
     # create the transformers matrix for each zone
-    view_transformers=[ViewTransformer(source=s, target=t)
-                    for s,t
+    view_transformers = [ViewTransformer(source=s, target=t)
+                    for s, t
                     in zip(SOURCES, TARGETS)]
     
 
@@ -280,12 +268,11 @@ def main():
     selected_classes = [2, 3, 5, 7] # car, motorcycle, bus, truck from coco classes
     # initialize the dictionary that we will use to store the coordinates for each zone
     coordinates = defaultdict(lambda: deque(maxlen=30))
-    coordinates = np.append(coordinates,defaultdict(lambda: deque(maxlen=30)))
-    coordinates = np.append(coordinates,defaultdict(lambda: deque(maxlen=30)))                     
-
-    # frame processing 
+    coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
+    coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
+    # frame processing
     def process_frame(frame: np.ndarray, fps) -> np.ndarray:
-        speed_labels = [],[],[] 
+        speed_labels = [], [], [] 
         
         results = model_openvino(frame, imgsz=640, verbose=False)[0]
         # results = model(frame)[0]
@@ -305,7 +292,7 @@ def main():
                                                                                                                                                         line_zone_annotators,
                                                                                                                                                         label_annotators,
                                                                                                                                                         lines_start,
-                                                                                                                                                            lines_end,
+                                                                                                                                                        lines_end,
                                                                                                                                                             view_transformers,
                                                                                                                                                             speed_labels,
                                                                                                                                                             coordinates)):
