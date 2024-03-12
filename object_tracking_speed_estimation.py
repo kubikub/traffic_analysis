@@ -1,16 +1,15 @@
 
 from vidgear.gears import CamGear
 import cv2
-import time
 import numpy as np
 import supervision as sv
-import os
 from collections import defaultdict, deque
 from ultralytics import YOLO
 
 def main():
 
-    source="https://youtu.be/z545k7Tcb5o"
+
+    source = "https://youtu.be/z545k7Tcb5o"
     # Add YouTube Video URL as input source (for e.g https://youtu.be/bvetuLwJIkA)
     # and enable Stream Mode (`stream_mode = True`)
     stream = CamGear(
@@ -43,7 +42,7 @@ def main():
     print(VIDEO)
 
     MODEL = "models/yolov8s.pt"
-    model=YOLO(MODEL)
+    model = YOLO(MODEL)
     CLASS_NAMES_DICT = model.model.names
     # print(CLASS_NAMES_DICT)
     # load openvino model to get faster FPS 
@@ -80,20 +79,20 @@ def main():
     y4 = [ 195 , 212 , 212  ]
 
     # transform according video stream and displayed video ratio 
-    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x], [x1, y1, x2, y2, x3, y3, x4, y4])
+    x1, y1, x2, y2, x3, y3, x4, y4 = map(lambda x: [value * coef for value in x],[x1, y1, x2, y2, x3, y3, x4, y4])
 
 
     # search middle point of the polygon (x1+x4)/2) or tier point from top ( x1 + 2* x4) / 3) to draw line for counting 
-    x14 = [( x1 + 2 * x4) / 3
+    x14 = [(x1 + 2 * x4) / 3
         for x1,x4
         in zip(x1,x4)]
-    y14 = [( y1 + 2 * y4) / 3
+    y14 = [(y1 + 2 * y4) / 3
         for y1,y4
         in zip(y1,y4)]
-    x23 = [ ( x2 + 2 * x3) / 3
+    x23 = [ (x2 + 2 * x3) / 3
         for x2,x3
         in zip(x2,x3)]
-    y23 = [( y2 + 2 * y3) / 3
+    y23 = [(y2 + 2 * y3) / 3
         for y2,y3
         in zip(y2,y3)]
 
@@ -106,9 +105,7 @@ def main():
     in zip(x1, y1, x2, y2, x3, y3, x4, y4)
     ]
 
-
     # initialize our zones
-
     zones = [
         sv.PolygonZone(
             polygon = polygon,
