@@ -12,7 +12,8 @@ def main():
 
     def video_manifest_extractor(source):
         """
-        Function to extract metadata from a YouTube video source and find the desired resolution URL.
+        Function to extract metadata from a YouTube video source
+          and find the desired resolution URL.
 
         Parameters:
         source (str): Video source URL (ex. "<https://youtu.be/bvetuLwJIkA>")
@@ -20,7 +21,8 @@ def main():
         Returns:
         str: Desired resolution video URL
         """
-        stream = CamGear(source=source, stream_mode=True, logging=True, time_delay=0).start()
+        stream = CamGear(source=source, stream_mode=True, logging=True,
+                         time_delay=0).start()
         video_metadata = stream.ytv_metadata
 
         print(video_metadata.keys())
@@ -55,11 +57,12 @@ def main():
 
     video_info = sv.VideoInfo.from_video_path(VIDEO)
 
-    # Calculate the scaling coefficient based on the video width and the desired output width (1280)
+    # Calculate the scaling coefficient based on the video width and
+    #  the desired output width (1280)
     coef = video_info.width / 1280
     # print(coef)
 
-    # polygon design 
+    # polygon design
     #  ----> x
     # |         (x4,y4)   (x3,y3)
     # |              +-------+
@@ -124,10 +127,10 @@ def main():
             color=colors.by_idx(index),
             text_thickness=1,
             text_scale=0.5,
-            )
-            for index
-            in range(len(zones))
-        ]
+        )
+        for index
+        in range(len(zones))
+    ]
     # box_annotators = [
     #     sv.BoxAnnotator(
     #         color=colors.by_idx(index),
@@ -170,20 +173,21 @@ def main():
     positions = [(sv.Position.CENTER, sv.Position.CENTER),
                  (sv.Position.CENTER, sv.Position.CENTER),
                  (sv.Position.CENTER, sv.Position.CENTER),
-    ]
-    line_zones = [sv.LineZone(start=line_start, end=line_end,
-                              triggering_anchors=position)
-                                for line_start, line_end, position
-                                in zip(lines_start, lines_end, positions)
+                ]
+    line_zones = [
+        sv.LineZone(start=line_start, end=line_end,
+                    triggering_anchors=position)
+        for line_start, line_end, position
+        in zip(lines_start, lines_end, positions)
     ]
     # for automatic line zone annotator not use here want to use a custom one
     line_zone_annotators = [sv.LineZoneAnnotator(thickness=1,
-                                            color=colors.by_idx(index),
-                                            text_thickness=1,
-                                            text_scale=0.5,
-                                            text_offset=4)
-                                            for index
-                                            in range(len(line_zones))
+                                                 color=colors.by_idx(index),
+                                                 text_thickness=1,
+                                                 text_scale=0.5,
+                                                 text_offset=4)
+                            for index
+                            in range(len(line_zones))
     ]
     # couting line zone text position 
     text_pos = [
@@ -191,7 +195,7 @@ def main():
         sv.Point(x=700, y=320),
         sv.Point(x=1077, y=320)
     ]
-    #initialyze ByteTracker
+    # initialyze ByteTracker
     byte_tracker = sv.ByteTrack(
         track_thresh=0.25,
         track_buffer=100, 
@@ -220,7 +224,7 @@ def main():
            ]
            ])
     # initialize Target real(in meters) coordinate 
-    #zone1 in meters
+    # zone1 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 75
     TARGETS = np.array([
@@ -229,7 +233,7 @@ def main():
         [TARGET_WIDTH - 1, TARGET_HEIGHT - 1],
         [0, TARGET_HEIGHT - 1],
     ])
-    #zone 2 in meters
+    # zone 2 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 85
     TARGETS = np.append(TARGETS, np.array([
@@ -238,7 +242,7 @@ def main():
         [TARGET_WIDTH - 1, TARGET_HEIGHT - 1],
         [0, TARGET_HEIGHT - 1],
     ]), axis=0)
-    #zone3 in meters
+    # zone3 in meters
     TARGET_WIDTH = 6
     TARGET_HEIGHT = 80
     TARGETS = np.append(TARGETS, np.array([
@@ -250,7 +254,8 @@ def main():
 
     TARGETS = TARGETS.reshape(3, 4, 2)
     # class searching transformation matrix between
-    #  SOURCE and TARGET to get speed estimation  
+    #  SOURCE and TARGET to get speed estimation
+
     class ViewTransformer:
 
         def __init__(self, source: np.ndarray, target: np.ndarray) -> None:
@@ -268,9 +273,11 @@ def main():
             return transformed_points.reshape(-1, 2)
 
     # create the transformers matrix for each zone
-    view_transformers = [ViewTransformer(source=s, target=t)
-                    for s, t
-                    in zip(SOURCES, TARGETS)]
+    view_transformers = [
+        ViewTransformer(source=s, target=t)
+        for s, t
+        in zip(SOURCES, TARGETS)
+    ]
     labels = []
     # car, motorcycle, bus, truck from coco classes
     selected_classes = [2, 3, 5, 7] 
@@ -280,6 +287,7 @@ def main():
     coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
     coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
     # frame processing
+
     def process_frame(frame: np.ndarray, fps) -> np.ndarray:
         speed_labels = [], [], []
         results = model_openvino(frame, imgsz=640, verbose=False)[0]
@@ -316,9 +324,9 @@ def main():
                     view_transformers,
                     speed_labels,
                     coordinates)):
+
             mask = zone.trigger(detections=detections)
             detections_filtered = detections[mask]
-        
             points = detections_filtered.get_anchors_coordinates(
                     anchor=sv.Position.BOTTOM_CENTER)
 
@@ -349,19 +357,27 @@ def main():
             # f"#{tracker_id} "
             # for _,_,_,_,tracker_id in detections_filtered]
             # line_zone.trigger(detections=detections_filtered)
-            annotated_frame = sv.draw_line(scene=annotated_frame, start=line_start, end=line_end, color=colors.by_idx(i) )
-            # annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {i+random.randint(0,100)}")
-            annotated_frame = zone_annotator.annotate(scene=annotated_frame, label=f"Dir. Ouest : {line_zone.in_count}") if i == 0 else zone_annotator.annotate(scene=annotated_frame, 
-                                                                                                                                                            label=f"Dir. Est : {line_zone.out_count}") 
+            annotated_frame = sv.draw_line(scene=annotated_frame,
+                                           start=line_start,
+                                           end=line_end,
+                                           color=colors.by_idx(i))
+            # annotated_frame = zone_annotator.annotate(scene=annotated_frame,
+            #  label=f"Dir. Ouest : {i+random.randint(0,100)}")
+            direction_label = "Dir. West" if i == 0 else "Dir. East"
+            annotated_frame = zone_annotator.annotate(
+                scene=annotated_frame,
+                label=f"{direction_label} : {line_zone.in_count}") if i == 0 else zone_annotator.annotate(
+                    scene=annotated_frame,
+                    label=f"{direction_label} : {line_zone.out_count}")
+
             annotated_frame = label_annotator.annotate(scene=annotated_frame,
-                                                    detections=detections_filtered,
-                                                    labels=speed_label)
-            
+                                                       detections=detections_filtered,
+                                                       labels=speed_label)
+
             # annotated_frame=line_zone_annotator.annotate(annotated_frame,line_counter=line_zone )
             annotated_frame = box_annotator.annotate(scene=annotated_frame,
-                                                    detections=detections_filtered,
-                                                    )
-            
+                                                     detections=detections_filtered)
+
             annotated_frame = trace_annotator.annotate(scene=annotated_frame,
                                                        detections=detections_filtered)
             line_zone.trigger(detections=detections_filtered)
