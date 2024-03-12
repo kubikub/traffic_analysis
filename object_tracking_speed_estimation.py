@@ -30,7 +30,7 @@ def main():
         print(res)
 
     # select the desired resolution to get right url 
-    # desired_resolution = '1280x720'
+    desired_resolution = '1280x720'
     for format in video_metadata['formats']:
         
         if format['resolution'] == desired_resolution:
