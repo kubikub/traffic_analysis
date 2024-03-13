@@ -193,11 +193,11 @@ def main():
         in range(len(line_zones))
     ]
     # couting line zone text position
-    text_pos = [
-        sv.Point(x=100, y=320),
-        sv.Point(x=700, y=320),
-        sv.Point(x=1077, y=320)
-    ]
+    # text_pos = [
+    #     sv.Point(x=100, y=320),
+    #     sv.Point(x=700, y=320),
+    #     sv.Point(x=1077, y=320)
+    # ]
     # initialyze ByteTracker
     byte_tracker = sv.ByteTrack(
         track_thresh=0.25,
@@ -207,8 +207,8 @@ def main():
     )
     # byte_tracker = sv.ByteTrack()
     fps_monitor = sv.FPSMonitor()
-    heat_map = sv.HeatMapAnnotator()
-    smoother = sv.DetectionsSmoother()
+    # heat_map = sv.HeatMapAnnotator()
+    # smoother = sv.DetectionsSmoother()
     # intialize the source coordinate for speed estimation
     SOURCES = np.array([[
         [x4[0], y4[0]],
