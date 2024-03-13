@@ -281,11 +281,11 @@ def main():
         for s, t
         in zip(SOURCES, TARGETS)
     ]
-    labels = []
     # car, motorcycle, bus, truck from coco classes
     selected_classes = [2, 3, 5, 7] 
     # initialize the dictionary that we 
     # will use to store the coordinates for each zone
+    coordinates = defaultdict(lambda: deque(maxlen=30))
     coordinates = defaultdict(lambda: deque(maxlen=30))
     coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
     coordinates = np.append(coordinates, defaultdict(lambda: deque(maxlen=30)))
@@ -332,8 +332,7 @@ def main():
             detections_filtered = detections[mask]
             points = detections_filtered.get_anchors_coordinates(
                     anchor=sv.Position.BOTTOM_CENTER)
-
-            # plug the view transformer into an existing detection pipeline           
+            # Intégrer le transformateur de vue dans un pipeline de détection existant
             points = view_transformer.transform_points(points=points).astype(int)
             for tracker_id, [_, y] in zip(detections_filtered.tracker_id, points):
                 coordinate[tracker_id].append(y)
